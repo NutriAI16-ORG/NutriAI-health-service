@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models import HealthLog, MealLog
+from app.database import get_db
+from app.models import HealthLog, MealLog
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health-tracker", tags=["Health Tracker"])

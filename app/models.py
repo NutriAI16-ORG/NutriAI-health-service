@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, date
 from sqlalchemy import Column, String, Integer, Float, Text, Date, DateTime, Enum, JSON
 from sqlalchemy.dialects.postgresql import UUID
-from database import Base
+from app.database import Base
 
 class HealthLog(Base):
     __tablename__ = "health_logs"
