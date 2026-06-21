@@ -18,6 +18,8 @@ from app.models import HealthLog, MealLog
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/health-tracker", tags=["Health Tracker"])
 
+INVALID_USER_ID_FORMAT = "Invalid user ID format"
+
 
 class HealthLogCreate(BaseModel):
     log_date: str
@@ -37,7 +39,13 @@ class MealLogCreate(BaseModel):
     notes: Optional[str] = None
 
 
-@router.get("/data")
+@router.get(
+    "/data",
+    responses={
+        400: {"description": INVALID_USER_ID_FORMAT},
+        401: {"description": "Not authenticated"},
+    }
+)
 async def chart_data(request: Request, db: Session = Depends(get_db)):
     user_id_str = request.headers.get("X-User-ID")
     if not user_id_str:
@@ -45,7 +53,7 @@ async def chart_data(request: Request, db: Session = Depends(get_db)):
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID_FORMAT)
 
     thirty_days_ago = date.today() - timedelta(days=30)
     health_logs = (
@@ -100,7 +108,13 @@ async def chart_data(request: Request, db: Session = Depends(get_db)):
     }
 
 
-@router.post("/log")
+@router.post(
+    "/log",
+    responses={
+        400: {"description": "Invalid user ID format or date format"},
+        401: {"description": "Not authenticated"},
+    }
+)
 async def add_health_log(payload: HealthLogCreate, request: Request, db: Session = Depends(get_db)):
     user_id_str = request.headers.get("X-User-ID")
     if not user_id_str:
@@ -108,7 +122,7 @@ async def add_health_log(payload: HealthLogCreate, request: Request, db: Session
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID_FORMAT)
 
     try:
         parsed_date = date.fromisoformat(payload.log_date)
@@ -134,7 +148,13 @@ async def add_health_log(payload: HealthLogCreate, request: Request, db: Session
         return JSONResponse(status_code=500, content={"error": "Failed to save health log."})
 
 
-@router.post("/meal")
+@router.post(
+    "/meal",
+    responses={
+        400: {"description": "Invalid user ID format, date format, or meal type"},
+        401: {"description": "Not authenticated"},
+    }
+)
 async def add_meal_log(payload: MealLogCreate, request: Request, db: Session = Depends(get_db)):
     user_id_str = request.headers.get("X-User-ID")
     if not user_id_str:
@@ -142,7 +162,7 @@ async def add_meal_log(payload: MealLogCreate, request: Request, db: Session = D
     try:
         user_id = uuid.UUID(user_id_str)
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid user ID format")
+        raise HTTPException(status_code=400, detail=INVALID_USER_ID_FORMAT)
 
     try:
         parsed_date = date.fromisoformat(payload.meal_date)
