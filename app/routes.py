@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.database import get_db
 from app.models import HealthLog, MealLog
@@ -118,7 +119,7 @@ async def add_health_log(payload: HealthLogCreate, request: Request, db: Session
 
     except ValueError:
         return JSONResponse(status_code=400, content={"error": "Invalid date format."})
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Error saving health log: {e}")
         db.rollback()
         return JSONResponse(status_code=500, content={"error": "Failed to save health log."})
@@ -151,7 +152,7 @@ async def add_meal_log(payload: MealLogCreate, request: Request, db: Session = D
 
     except ValueError:
         return JSONResponse(status_code=400, content={"error": "Invalid date format."})
-    except Exception as e:
+    except SQLAlchemyError as e:
         logger.error(f"Error saving meal log: {e}")
         db.rollback()
         return JSONResponse(status_code=500, content={"error": "Failed to save meal log."})
